@@ -34,10 +34,10 @@ let package = Package(
     ],
   dependencies: [
     .package(url: "https://github.com/RuntimeTools/omr-agentcore", .exact("3.2.4-swift4")),
-    .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "2.0.0"),
-    .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "0.9.0"),
+    .package(url: "https://github.com/sandmman/Kitura.git", from: "2.0.0"),
+    .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "1.0.0"),
     .package(url: "https://github.com/IBM-Swift/SwiftyRequest.git", from: "1.0.0"),
-    .package(url: "https://github.com/IBM-Swift/Swift-cfenv.git", from: "5.0.0"),
+    .package(url: "https://github.com/IBM-Swift/Swift-cfenv.git", from: "4.0.0"),
     .package(url: "https://github.com/IBM-Swift/SwiftyJSON.git", from: "17.0.0"),
   ],
   targets: [
