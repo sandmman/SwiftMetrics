@@ -37,7 +37,7 @@ let package = Package(
     .package(url: "https://github.com/sandmman/Kitura.git", from: "2.0.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "1.0.0"),
     .package(url: "https://github.com/IBM-Swift/SwiftyRequest.git", from: "1.0.0"),
-    .package(url: "https://github.com/IBM-Swift/Swift-cfenv.git", from: "6.0.0"),
+    .package(url: "https://github.com/IBM-Swift/Swift-cfenv.git", from: "4.0.0"),
     .package(url: "https://github.com/IBM-Swift/SwiftyJSON.git", from: "17.0.0"),
   ],
   targets: [
