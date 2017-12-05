@@ -11,7 +11,8 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
   /// Weak references to monitored circuit breakers
   public var refs: [Weak] = []
 
-  public var endpoint: URL
+  /// Port used for web socket connection (Default 8081)
+  public var port: Int
 
   /// Default interval to emit circuit breaker updates
   public var snapshotDelay: Int = 1200
@@ -28,20 +29,10 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
   ///
   /// - Parameter:
   ///   - swiftMetricsInstance: SwiftMetrics instance
-  ///   - endpoint: The endpoint for the swift metrics instance
-  public init(swiftMetricsInstance: SwiftMetrics, endpoint: URL) {
+  ///   - port: The port to listen on.
+  public init(swiftMetricsInstance: SwiftMetrics, port: Int = 8081) {
     instance = swiftMetricsInstance
-    self.endpoint = endpoint
-  }
-
-  /// Initializer
-  ///
-  /// - Parameter:
-  ///   - swiftMetricsInstance: SwiftMetrics instance
-  ///   - endpoint: The endpoint for the swift metrics instance
-  public init?(swiftMetricsInstance: SwiftMetrics, endpoint: String = "https://localhost:9002") {
-    instance = swiftMetricsInstance
-    self.endpoint = URL(string: endpoint)!
+    self.port = port
   }
 
   /// Registers a circuit breaker to be monitored
@@ -74,8 +65,13 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
     }
   }
 
-  public func handle(request: ServerRequest, response: ServerResponse) {}
+  /// Conformance to Server Delegate Protocol
+  public func handle(request: ServerRequest, response: ServerResponse) {
+    Log.entry("Received message to server delegate handle")
+    print("hello")
+  }
 
+  /// Registers websocket instance and begins 
   private func instantiateServer() {
     WebSocket.register(service: self, onPath: "hystrix.stream")
 
@@ -83,10 +79,10 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
     server.delegate = self
 
     do {
-      try server.listen(on: 8081)
+      try server.listen(on: port)
       ListenerGroup.waitForListeners()
     } catch {
-      Log.error("Error listening on port 8080: \(error).")
+      Log.error("Error listening on port 8081: \(error).")
     }
   }
 
