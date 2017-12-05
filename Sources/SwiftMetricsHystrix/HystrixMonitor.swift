@@ -4,7 +4,6 @@ import CircuitBreaker
 import KituraNet
 import LoggerAPI
 import KituraWebSocket
-import Kitura
 
 public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
 
@@ -71,7 +70,7 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
     print("hello")
   }
 
-  /// Registers websocket instance and begins 
+  /// Registers websocket instance and begins listening
   private func instantiateServer() {
     WebSocket.register(service: self, onPath: "hystrix.stream")
 
