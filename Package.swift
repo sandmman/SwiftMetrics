@@ -23,6 +23,7 @@ let package = Package(
         .library(
             name: "SwiftMetrics",
             targets: ["SwiftMetrics",
+                "SwiftMetricsHystrix",
                 "SwiftMetricsKitura",
                 "SwiftBAMDC",
                 "SwiftMetricsBluemix",
