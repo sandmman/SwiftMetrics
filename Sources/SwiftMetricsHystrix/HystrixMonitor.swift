@@ -5,7 +5,7 @@ import KituraNet
 import LoggerAPI
 import KituraWebSocket
 
-public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
+public class SwiftMetricsCircuitBreaker: HystrixMonitor {
 
   /// Weak references to monitored circuit breakers
   public var refs: [Weak] = []
@@ -54,7 +54,7 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
   }
 
   /// Method to filter circuit breaker refs and emit snapshots
-  public func sendSnapshots() {
+  private func sendSnapshots() {
     self.refs = self.refs.filter {
       if let breaker = $0.value {
         self.emit(snapshot: breaker.hystrixSnapshot)
@@ -62,12 +62,6 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
       }
       return false
     }
-  }
-
-  /// Conformance to Server Delegate Protocol
-  public func handle(request: ServerRequest, response: ServerResponse) {
-    Log.entry("Received message to server delegate handle")
-    print("hello")
   }
 
   /// Registers websocket instance and begins listening
@@ -117,21 +111,34 @@ public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
   }
 }
 
+/// Conformance to Server Delegate Protocol
+extension SwiftMetricsCircuitBreaker: ServerDelegate {
+
+  /// Server Delegate Protocol Handler
+  public func handle(request: ServerRequest, response: ServerResponse) {
+    Log.entry("Received message to server delegate handle")
+  }
+}
+
 /// WebSocketService conformance extension
 extension SwiftMetricsCircuitBreaker: WebSocketService {
 
+  /// Method called when a new connection is made
   public func connected(connection: WebSocketConnection) {
     connections[connection.id] = connection
   }
 
+  /// Method called when a connection is disconnected
   public func disconnected(connection: WebSocketConnection, reason: WebSocketCloseReasonCode) {
     connections.removeValue(forKey: connection.id)
   }
 
+  /// Method called when a data message has been received
   public func received(message: Data, from: WebSocketConnection) {
     Log.entry("Received message from connection: \(message.count)")
   }
 
+  /// Method called when a string message has been received
   public func received(message: String, from: WebSocketConnection) {
     Log.entry("Received message from connection: \(message)")
   }
