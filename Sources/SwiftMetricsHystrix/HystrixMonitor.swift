@@ -1,7 +1,7 @@
 import Foundation
 import SwiftMetrics
 import CircuitBreaker
-import KituraRequest
+import Kitura
 
 public class SwiftMetricsCircuitBreaker: Monitor {
 
@@ -24,7 +24,7 @@ public class SwiftMetricsCircuitBreaker: Monitor {
   /// - Parameter:
   ///   - swiftMetricsInstance: SwiftMetrics instance
   ///   - endpoint: The endpoint for the swift metrics instance
-  init(swiftMetricsInstance: SwiftMetrics, endpoint: URL) {
+  public init(swiftMetricsInstance: SwiftMetrics, endpoint: URL) {
     instance = swiftMetricsInstance
     self.endpoint = endpoint
   }
@@ -34,7 +34,7 @@ public class SwiftMetricsCircuitBreaker: Monitor {
   /// - Parameter:
   ///   - swiftMetricsInstance: SwiftMetrics instance
   ///   - endpoint: The endpoint for the swift metrics instance
-  init?(swiftMetricsInstance: SwiftMetrics, endpoint: String = "https://localhost:9002") {
+  public init?(swiftMetricsInstance: SwiftMetrics, endpoint: String = "https://localhost:9002") {
     instance = swiftMetricsInstance
     self.endpoint = URL(string: endpoint)!
   }
@@ -68,16 +68,26 @@ public class SwiftMetricsCircuitBreaker: Monitor {
     }
   }
 
+  private func instantiateServer() {
+    let router = Router()
+    router.get("hystrix-stream") { request, response, error in
+      guard let obj = self.refs.first, let data = try? JSONSerialization.data(withJSONObject: obj.value!, options: .prettyPrinted) else {
+        response.send(data: Data())
+        return
+      }
+     
+      response.send(data: data)
+    }
+    Kitura.addHTTPServer(onPort: 8081, with: router)
+    Kitura.start()
+  }
 
   /// Emits a hystrix json object to the server
   ///
   /// - Parameters
   ///   - snapshot: A hystrix compliant [String: Any] dictionary
-  public func emit(snapshot: [String: Any]) {
-    KituraRequest.request(Request.Method.post, endpoint.absoluteString, parameters: snapshot, encoding: JSONEncoding.default, headers: [:]).response {
-      request, response, data, error in
-      print(request, response, data, error)
-    }
+  private func emit(snapshot: [String: Any]) {
+
   }
 
   /// Hystric Emit Timer Setup Method
