@@ -1,9 +1,12 @@
 import Foundation
 import SwiftMetrics
 import CircuitBreaker
+import KituraNet
+import LoggerAPI
+import KituraWebSocket
 import Kitura
 
-public class SwiftMetricsCircuitBreaker: Monitor {
+public class SwiftMetricsCircuitBreaker: HystrixMonitor, ServerDelegate {
 
   /// Weak references to monitored circuit breakers
   public var refs: [Weak] = []
@@ -18,6 +21,8 @@ public class SwiftMetricsCircuitBreaker: Monitor {
   private let queue = DispatchQueue(label: "Hystrix Queue", attributes: .concurrent)
 
   private let instance: SwiftMetrics
+
+  private var connections = [String: WebSocketConnection]()
 
   /// Initializer
   ///
@@ -50,6 +55,7 @@ public class SwiftMetricsCircuitBreaker: Monitor {
   /// Begins emitting snapshots
   public func startSnapshots() {
     startResetTimer()
+    instantiateServer()
   }
 
   /// Stops emitting snapshots
@@ -68,26 +74,33 @@ public class SwiftMetricsCircuitBreaker: Monitor {
     }
   }
 
+  public func handle(request: ServerRequest, response: ServerResponse) {}
+
   private func instantiateServer() {
-    let router = Router()
-    router.get("hystrix-stream") { request, response, error in
-      guard let obj = self.refs.first, let data = try? JSONSerialization.data(withJSONObject: obj.value!, options: .prettyPrinted) else {
-        response.send(data: Data())
-        return
-      }
-     
-      response.send(data: data)
+    WebSocket.register(service: self, onPath: "hystrix.stream")
+
+    let server = HTTP.createServer()
+    server.delegate = self
+
+    do {
+      try server.listen(on: 8081)
+      ListenerGroup.waitForListeners()
+    } catch {
+      Log.error("Error listening on port 8080: \(error).")
     }
-    Kitura.addHTTPServer(onPort: 8081, with: router)
-    Kitura.start()
   }
 
-  /// Emits a hystrix json object to the server
+  /// Emits a hystrix json object to our web socket connections
   ///
   /// - Parameters
   ///   - snapshot: A hystrix compliant [String: Any] dictionary
   private func emit(snapshot: [String: Any]) {
+    guard let data = try? JSONSerialization.data(withJSONObject: snapshot, options: .prettyPrinted) else {
+      Log.error("Invalid JSON found in Hystrix snapshot")
+      return
+    }
 
+    for (_, conn) in connections { conn.send(message: data) }
   }
 
   /// Hystric Emit Timer Setup Method
@@ -100,10 +113,31 @@ public class SwiftMetricsCircuitBreaker: Monitor {
 
     snapshotTimer?.setEventHandler { [weak self] in
       self?.sendSnapshots()
+      self?.startResetTimer()
     }
 
     snapshotTimer?.schedule(deadline: .now() + .milliseconds(snapshotDelay))
 
     snapshotTimer?.resume()
+  }
+}
+
+/// WebSocketService conformance extension
+extension SwiftMetricsCircuitBreaker: WebSocketService {
+
+  public func connected(connection: WebSocketConnection) {
+    connections[connection.id] = connection
+  }
+
+  public func disconnected(connection: WebSocketConnection, reason: WebSocketCloseReasonCode) {
+    connections.removeValue(forKey: connection.id)
+  }
+
+  public func received(message: Data, from: WebSocketConnection) {
+    Log.entry("Received message from connection: \(message.count)")
+  }
+
+  public func received(message: String, from: WebSocketConnection) {
+    Log.entry("Received message from connection: \(message)")
   }
 }

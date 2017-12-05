@@ -45,7 +45,7 @@ let package = Package(
   targets: [
       .target(name: "SwiftMetrics", dependencies: ["agentcore", "hcapiplugin", "envplugin", "cpuplugin", "memplugin", "CloudFoundryEnv"]),
       .target(name: "SwiftMetricsKitura", dependencies: ["SwiftMetrics", "Kitura"]),
-      .target(name: "SwiftMetricsHystrix", dependencies: ["SwiftMetrics", "CircuitBreaker", "Kitura"]),
+      .target(name: "SwiftMetricsHystrix", dependencies: ["SwiftMetrics", "CircuitBreaker", "Kitura-WebSocket"]),
       .target(name: "SwiftBAMDC", dependencies: ["SwiftMetricsKitura", "KituraRequest", "Kitura-WebSocket"]),
       .target(name: "SwiftMetricsBluemix", dependencies: ["SwiftMetricsKitura","SwiftBAMDC","SwiftyJSON"]),
       .target(name: "SwiftMetricsDash", dependencies: ["SwiftMetricsBluemix"]),
