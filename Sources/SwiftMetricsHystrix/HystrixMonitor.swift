@@ -1,16 +1,15 @@
-
 import Foundation
 import SwiftMetrics
 import CircuitBreaker
 import KituraRequest
 
 public class SwiftMetricsCircuitBreaker: Monitor {
-  
+
   /// Weak references to monitored circuit breakers
   public var refs: [Weak] = []
 
   public var endpoint: URL
-  
+
   /// Default interval to emit circuit breaker updates
   public var snapshotDelay: Int = 1200
 
@@ -83,18 +82,18 @@ public class SwiftMetricsCircuitBreaker: Monitor {
 
   /// Hystric Emit Timer Setup Method
   private func startResetTimer() {
-    
+
     // Cancel previous timer if any
     snapshotTimer?.cancel()
-    
+
     snapshotTimer = DispatchSource.makeTimerSource(queue: queue)
-    
+
     snapshotTimer?.setEventHandler { [weak self] in
       self?.sendSnapshots()
     }
-    
+
     snapshotTimer?.schedule(deadline: .now() + .milliseconds(snapshotDelay))
-    
+
     snapshotTimer?.resume()
   }
 }
